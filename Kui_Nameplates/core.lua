@@ -45,7 +45,8 @@ addon.defaultSizes = {
 -- add latin-only fonts to LSM
 LSM:Register(LSM.MediaType.FONT, 'Yanone Kaffesatz Bold', kui.m.f.yanone)
 LSM:Register(LSM.MediaType.FONT, 'FrancoisOne', kui.m.f.francois)
-local DEFAULT_FONT = 'FrancoisOne'
+LSM:Register(LSM.MediaType.FONT, 'ABF', kui.m.f.abf)
+local DEFAULT_FONT = 'ABF'
 
 -- add my status bar textures too..
 LSM:Register(LSM.MediaType.STATUSBAR, 'Kui status bar', kui.m.t.bar)

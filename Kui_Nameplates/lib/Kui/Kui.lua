@@ -32,6 +32,7 @@ kui.m = {
 	f = {
 		yanone	 = media..'f\\yanone.ttf',
      	francois = media..'f\\francois.ttf',
+     	abf = media..'f\\ABF.ttf',
 	},
 }
 ------------------------------------------------------------------ var tables --
