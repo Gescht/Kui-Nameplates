@@ -17,6 +17,7 @@ addon.defaultSizes = { frame = {}, font = {}, tex = {} }
 addon.frameList = {}
 addon.numFrames = 0
 addon.inCombat = nil
+addon.superwow = SpellInfo
 
 -- sizes of frame elements
 -- TODO these should be set in create.lua
@@ -144,12 +145,16 @@ do
     end
     
     function addon:StoreGUID(f, unit)
-      --  Sea.io.print("unit=",unit)
-		if not unit then return end
+	if not unit and addon.superwow then
+            unit = f.oldHealth.kuiParent:GetName(1)
+        end
+        if not unit then
+            return
+        end
 		local guid  = kui.UnitGUID(unit)
-        local _, classification = kui.UnitLevel(unit)
+		local _, classification = kui.UnitLevel(unit)
 
-		
+
         if not guid then return end
 		
         if f.guid and loadedGUIDs[f.guid] and unit ~= 'mouseover' then
@@ -162,7 +167,7 @@ do
         end
 		
         f.guid = guid
-        f.classification = classification
+		f.classification = classification
 		
         loadedGUIDs[guid] = f
         f.pet = nil
@@ -184,7 +189,7 @@ do
                 end 
             end
             if not found then
-            tinsert(knownIndex, f.name.text)
+                tinsert(knownIndex, f.name.text)
             end
 			local _
 			_, knownClass[guid] = UnitClass(unit)
@@ -198,15 +203,15 @@ do
                 knownGUIDs[dguid] = nil
             end
         
-        elseif loadedNames[f.name.text] == f then
+     elseif loadedNames[f.name.text] == f then
             -- force the registered f for this name to change
             loadedNames[f.name.text] = nil
         end
         if kui.UnitIsPet(unit) then
-            f.pet = true
-            self:NameOnlyEnable(f)
-        end 
-    end
+                f.pet = true
+                self:NameOnlyEnable(f)
+            end 
+        end
 
     function addon:StoreName(f)
         if not f.name.text or f.guid then return end
@@ -255,11 +260,11 @@ do
     end
 
 	function addon:GetTargetNameplate()
-        for _, frame in pairs(addon.frameList) do
-			if frame.kui.target then
-				return frame.kui
-			end
+            for _, frame in pairs(addon.frameList) do
+		if frame.kui.target then
+			return frame.kui
 		end
+	    end
 	end
 
     function addon:GetMouseoverNameplate()
@@ -274,7 +279,7 @@ do
     function addon:GetNameplates(name)
         local frames = {}
         for _, frame in pairs(addon.frameList) do
-            if frame.kui.name.text == name then
+            if frame.kui.name.text == name or frame.kui.guid == name then
                 tinsert( frames, frame.kui)
             end
         end
@@ -485,6 +490,13 @@ addon.configChangedFuncs.targetglowcolour = function(frame, val)
     frame.targetGlow:SetVertexColor(unpack(val))
 end
 
+addon.configChangedFuncs.targetarrows = function(frame, val)
+    if val then
+        -- create arrows if needed
+        addon:configChangedTargetArrows()
+    end
+end
+
 addon.configChangedFuncs.strata = function(frame, val)
     frame:SetFrameStrata(val)
 end
@@ -498,7 +510,7 @@ function addon:LSMMediaRegistered(msg, mediatype, key)
     elseif mediatype == LSM.MediaType.STATUSBAR then
         if key == self.db.profile.general.bartexture then
             self.bartexture = LSM:Fetch(mediatype, key)
-            UpdateAllFonts()
+            UpdateAllBars()
         end
     end
 end
@@ -514,8 +526,8 @@ function addon:OnInitialize()
 	self.acd = LibStub('AceConfigDialog-3.0')
     -- enable ace3 profiles
 	local optionstable = LibStub('AceDBOptions-3.0'):GetOptionsTable(self.db)
-    addon:InitDBOptions(optionstable, "Profiles")
-    -- self.ac.RegisterOptionsTable(self, 'kuinameplates-profiles', optionstable)
+	addon:InitDBOptions(optionstable, "Profiles")
+   --self.ac.RegisterOptionsTable(self, 'kuinameplates-profiles', optionstable)
    --self.acd:AddToBlizOptions('kuinameplates','Profiles', 'kuinameplates', 'Profiles')
     
     self.db.RegisterCallback(self, 'OnProfileChanged', 'ProfileChanged')
