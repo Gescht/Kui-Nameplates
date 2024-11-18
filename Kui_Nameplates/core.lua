@@ -67,6 +67,8 @@ local defaults = {
             targetglow  = true,
             bartexture  = DEFAULT_BAR,
             targetglowcolour = { .3, .7, 1, 1 },
+            targetarrows = true,
+            targetarrowssize = 28,
             hheight     = 10,
             thheight    = 7,
             width       = 100,
@@ -75,6 +77,8 @@ local defaults = {
             glowshadow  = true,
             strata      = 'BACKGROUND',
             clickThrough = 2,
+            raidicon_size = 30,
+            raidicon_side = 3,
 			reactioncolours = {
 				hatedcol    = { .7, .2, .1 },
 				neutralcol  = {  1, .8,  0 },
@@ -488,6 +492,7 @@ end
 
 addon.configChangedFuncs.targetglowcolour = function(frame, val)
     frame.targetGlow:SetVertexColor(unpack(val))
+    if frame.TargetArrows then frame.TargetArrows:SetVertexColor(unpack(val)) end
 end
 
 addon.configChangedFuncs.targetarrows = function(frame, val)
@@ -495,6 +500,24 @@ addon.configChangedFuncs.targetarrows = function(frame, val)
         -- create arrows if needed
         addon:configChangedTargetArrows()
     end
+    for _,f in addon.frameList do
+        addon:UpdateTargetArrows(f.kui)
+    end
+end
+
+addon.configChangedFuncs.targetarrowssize = function(frame, val)
+    if frame.TargetArrows then frame.TargetArrows:SetSize(val) end
+end
+
+addon.configChangedFuncs.runOnce.raidicon_size = function(val)
+    addon:RegisterSize('tex', 'raidicon', val)
+end
+addon.configChangedFuncs.raidicon_size = function(frame, val)
+    addon:RegisterSize('tex', 'raidicon', val)
+    addon:UpdateRaidIcon(frame)
+end
+addon.configChangedFuncs.raidicon_side = function(frame, val)
+    addon:UpdateRaidIcon(frame)
 end
 
 addon.configChangedFuncs.strata = function(frame, val)
@@ -570,6 +593,7 @@ function addon:OnEnable()
     self.defaultSizes.tex.healthOffset = self.db.profile.text.healthoffset
     self.defaultSizes.tex.targetGlowW = self.defaultSizes.frame.width - 5
     self.defaultSizes.tex.ttargetGlowW = self.defaultSizes.frame.twidth - 5
+    self.defaultSizes.tex.raidicon = self.db.profile.general.raidicon_size
 
     self:ScaleAllSizes()
 

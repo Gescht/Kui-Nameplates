@@ -276,7 +276,6 @@ end
 
 -- target arrows ###############################################################
 do
-    local TARGET_ARROWS 
     local function Arrows_Hide(self)
         self.l:Hide()
         self.r:Hide()
@@ -292,8 +291,8 @@ do
         self.r:SetAlpha(1)
     end
     local function Arrows_UpdatePosition(self)
-        self.l:SetPoint('RIGHT',self.parent.bg,'LEFT',3,0) --TARGET_ARROWS_INSET
-        self.r:SetPoint('LEFT',self.parent.bg,'RIGHT',-3,0)
+        self.l:SetPoint('RIGHT',self.parent.bg,'LEFT',7,0) --TARGET_ARROWS_INSET
+        self.r:SetPoint('LEFT',self.parent.bg,'RIGHT',-7,0)
     end
     local function Arrows_SetSize(self,size)
         self.l:SetHeight(size)
@@ -303,25 +302,24 @@ do
         self:UpdatePosition()
     end
 
-    local function UpdateTargetArrows(f)
-        if not TARGET_ARROWS or f.IN_NAMEONLY then
-            f.TargetArrows:Hide()
+    function addon:UpdateTargetArrows(f)
+        if not self.db.profile.general.targetarrows or f.IN_NAMEONLY then
+            if f.TargetArrows then f.TargetArrows:Hide() end
             return
         end
 
         if f.target then
             f.TargetArrows.l:SetTexture("Interface\\AddOns\\Kui_Nameplates\\media\\targetarrows3")
             f.TargetArrows.r:SetTexture("Interface\\AddOns\\Kui_Nameplates\\media\\targetarrows3")
-            f.TargetArrows:SetVertexColor(.3, .7, 1, .6)
-            f.TargetArrows:SetSize(28)
+            f.TargetArrows:SetVertexColor(unpack(self.db.profile.general.targetglowcolour))
+            f.TargetArrows:SetSize(self.db.profile.general.targetarrowssize)
             f.TargetArrows:Show()
         else
             f.TargetArrows:Hide()
         end
     end
     function addon:CreateTargetArrows(f)
-        TARGET_ARROWS = self.db.profile.general.targetarrows
-        if not TARGET_ARROWS or f.TargetArrows then return end
+        if not self.db.profile.general.targetarrows or f.TargetArrows then return end
 
         local left = f.health:CreateTexture(nil,'ARTWORK',nil,4)
         left:SetBlendMode('BLEND')
@@ -342,13 +340,28 @@ do
         }
 
         f.TargetArrows = arrows
-        f.UpdateTargetArrows = UpdateTargetArrows
     end
     function addon:configChangedTargetArrows()
-        if not TARGET_ARROWS then return end
+        if not self.db.profile.general.targetarrows then return end
         for _,f in addon.frameList do
-            self:CreateTargetArrows(f)
+            self:CreateTargetArrows(f.kui)
         end
     end
 
+end
+
+-- raid icon ###################################################################
+local PositionRaidIcon = {
+    function(f) return f.icon:SetPoint('RIGHT',f.overlay,'LEFT',-8,0) end,
+    function(f) return f.icon:SetPoint('BOTTOM',f.overlay,'TOP',0,12) end,
+    function(f) return f.icon:SetPoint('LEFT',f.overlay,'RIGHT',8,0) end,
+    function(f) return f.icon:SetPoint('TOP',f.overlay,'BOTTOM',0,-8) end,
+}
+function addon:UpdateRaidIcon(f)
+    f.icon:SetParent(f.overlay)
+    f.icon:SetHeight(addon.sizes.tex.raidicon)
+    f.icon:SetWidth(addon.sizes.tex.raidicon)
+
+    f.icon:ClearAllPoints()
+    PositionRaidIcon[addon.db.profile.general.raidicon_side](f)
 end
