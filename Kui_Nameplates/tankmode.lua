@@ -90,7 +90,7 @@ local function getTankColor(tank)
 end
 
 function mod:GuidsTargets()
-    printT(guidsTargets)
+    --printT(guidsTargets)
 end
 
 function mod:TrackTargets(msg, f)
@@ -295,7 +295,7 @@ local function SetAgroText(self, agro, agrocolor)
 end
 
 function mod:CreateAgroText(msg, frame)
-    printT("CreateAgroText")
+    --printT("CreateAgroText")
     frame.agroText = frame:CreateFontString(frame.overlay, {
         size = 'spellname',
         outline = 'OUTLINE'
