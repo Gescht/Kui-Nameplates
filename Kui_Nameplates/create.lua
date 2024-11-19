@@ -303,7 +303,13 @@ do
     end
 
     function addon:UpdateTargetArrows(f)
-        if not self.db.profile.general.targetarrows or f.IN_NAMEONLY then
+        if self.db.profile.general then
+            if not self.db.profile.general.targetarrows then
+                if f.TargetArrows then f.TargetArrows:Hide() end
+                return
+            end
+        end
+        if f.IN_NAMEONLY then
             if f.TargetArrows then f.TargetArrows:Hide() end
             return
         end
