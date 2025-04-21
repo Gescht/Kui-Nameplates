@@ -3,9 +3,6 @@
 -- By Kesava at curse.com
 -- All rights reserved
 ]]
-do
---return
-end
 
 local kui = LibStub('Kui-1.0')
 local addon = LibStub('AceAddon-3.0'):GetAddon('KuiNameplates')
@@ -22,8 +19,57 @@ local function ResetFade(f)
 	f.castbar:SetAlpha(1)
 end
 
+local interrupts = {
+  ["Shield Bash"] = true;
+  ["Pummel"] = true;
+  ["Kick"] = true;
+  ["Earth Shock"] = true;
+  ["Concussion Blow"] = true;
+  ["Charge Stun"] = true;
+  ["Intercept Stun"] = true;
+  ["Hammer of Justice"] = true;
+  ["Cheap Shot"] = true;
+  ["Gouge"] = true;
+  ["Kidney Shot"] = true;
+  ["Silence"] = true;
+  ["Counterspell"] = true;
+  ["Spell lock"] = true;
+  ["Counterspell - Silenced"] = true;
+  ["Bash"] = true;
+  ["Fear"] = true;
+  ["Howl of Terror"] = true;
+  ["Psychic Scream"] = true;
+  ["Intimidating Shout"] = true;
+  ["Starfire Stun"] = true;
+  ["Revenge Stun"] = true;
+  ["Improved Concussive Shot"] = true;
+  ["Impact"] = true;
+  ["Pyroclasm"] = true;
+  ["Blackout"] = true;
+  ["Stun"] = true;
+  ["Mace Stun Effect"] = true;
+  ["Earthshaker"] = true;
+  ["Repentance"] = true;
+  ["Scatter Shot"] = true;
+  ["Blind"] = true;
+  ["Hibernate"] = true;
+  ["Wyvern Sting"] = true;
+  ["Rough Copper Bomb"] = true;
+  ["Large Copper Bomb"] = true;
+  ["Small Bronze Bomb"] = true;
+  ["Big Bronze Bomb"] = true;
+  ["Big Iron Bomb"] = true;
+  ["Mithril Frag Bomb"] = true;
+  ["Hi-Explosive Bomb"] = true;
+  ["Dark Iron Bomb"] = true;
+  ["Iron Grenade"] = true;
+  ["M73 Frag Grenade"] = true;
+  ["Thorium Grenade"] = true;
+  ["Goblin Mortar"] = true;
+  ["Polymorph"] = true;
+}
 ------------------------------------------------------------- Script handlers --
-local function OnCastbarShow(f, spell,icon)
+local function OnCastbarShow(f, spell,icon, colour)
 	if not mod.enabledState then return end
 
 --	local f = self:GetParent():GetParent().kui
@@ -38,10 +84,14 @@ local function OnCastbarShow(f, spell,icon)
 		f.castbar.bar:SetStatusBarColor(unpack(mod.db.profile.display.shieldbarcolour))
 		f.castbar.shield:Show()
 else ]]
-		f.castbar.bar:SetStatusBarColor(unpack(mod.db.profile.display.barcolour))
+		
 	--	f.castbar.shield:Hide()
 	--end
---	
+	if colour then 
+		f.castbar.bar:SetStatusBarColor(unpack(colour))
+	else
+		f.castbar.bar:SetStatusBarColor(unpack(mod.db.profile.display.barcolour))
+	end
 	if f.trivial then
 		-- hide text & icon
 		if f.castbar.icon then
@@ -119,6 +169,14 @@ function mod:OnCastbarUpdate(f, elapsed)
 	    end
 	end
 	if v ~= nil and GetTime() < v.timeEnd then
+		if v.spell == "INTERUPTED" or v.spell == "FAILED" then
+			f.castbar.bar:SetMinMaxValues(0,1)
+			f.castbar.bar:SetValue(1)
+			f.castbar.spark:Hide()
+			if f.castbar.curr then 	f.castbar.curr:SetText('') end
+			OnCastbarShow(f,v.spell, v.icon, {1,0,0})
+			f.castbar:Show()
+		else
 
 		f.castbar.bar:SetMinMaxValues(0, v.timeEnd - v.timeStart)
 		if v.inverse then
@@ -136,12 +194,15 @@ function mod:OnCastbarUpdate(f, elapsed)
 
 		sp = v.inverse and sp or -sp
 		f.castbar.spark:SetPoint("CENTER", f.castbar.bar:GetRegions(), v.inverse and "LEFT" or "RIGHT", sp, 0)
+			f.castbar.spark:Show()
 		f.castbar:SetAlpha(f.currentAlpha)
 		if not f.castbar:IsShown() then
 			OnCastbarShow(f, v.spell, v.icon)
 			f.castbar:Show()
 		end
+		end
 	else 
+		if v ~= nil then v= nil end
 		OnCastbarHide(f)
 	end
 end
@@ -150,7 +211,7 @@ local function OnStartCast(event, info)
 	
 	local frame
 	local guid
-	if LoggingCombat and LoggingCombat("RAW") == 1 then
+	if addon.superwow then
 		guid = info.caster
 	else
 		guid = addon:GetKnownGUID(info.caster) -- Player
@@ -199,12 +260,25 @@ local function OnCastEvent()
 			}
 			
 			mod:OnCastbarUpdate(frame)
-		elseif (eventType == "CAST" or eventType == "FAIL" )
-						and frame.castbar.spellInfo and frame.castbar.spellInfo.spellId == spellId then
+		elseif (eventType == "FAIL") and frame.castbar.spellInfo and frame.castbar.spellInfo.spellId == spellId then
+			if frame.castbar.spellInfo.spell ~= "INTERUPTED" then frame.castbar.spellInfo.spell = "FAILED" end
+			frame.castbar.spellInfo.timeEnd = GetTime() + 1
+			mod:OnCastbarUpdate(frame)
+		elseif (eventType == "CAST" )and frame.castbar.spellInfo and frame.castbar.spellInfo.spellId == spellId then
 			frame.castbar.spellInfo = nil
 			OnCastbarHide(frame)
 		end
 	end
+	frame = addon:GetNameplate(target)
+	if frame and frame.castbar then
+		local spell, rank, icon = SpellInfo(spellId)
+		if (eventType == "CAST") and frame.castbar.spellInfo and interrupts[spell] then
+			frame.castbar.spellInfo.spell = "INTERUPTED"
+			frame.castbar.spellInfo.timeEnd = GetTime() + 1
+			OnCastbarHide(frame)
+		end
+	end
+
 end
 
 ---------------------------------------------------------------------- create --
@@ -378,13 +452,6 @@ function mod:GetOptions()
 					type = 'color',
 					order = 0
 				},
-	--[[			shieldbarcolour = {
-					name = 'Uninterruptible colour',
-					desc = 'The colour of the cast bar and shield during UNinterruptible casts.',
-					type = 'color',
-					order = 5
-				},
-	]]
 				cbheight = {
 					name = 'Height',
 					desc = 'The height of castbars on nameplates. Also affects the size of the spell icon.',
@@ -410,7 +477,7 @@ function mod:OnInitialize()
 				spellicon       = true,
 				cbheight        = 4,
 				barcolour       = { .43, .47, .55, 1 },
---				shieldbarcolour = { .8,  .1,  .1,  1 },
+
 			}
 		}
 	})
@@ -418,8 +485,6 @@ function mod:OnInitialize()
 	addon:RegisterSize('frame', 'cbheight', self.db.profile.display.cbheight)
 	addon:RegisterSize('frame', 'icon', 
 		addon.db.profile.general.hheight + addon.defaultSizes.frame.cbheight + 1)
---	addon:RegisterSize('tex', 'shieldw', 10)
---	addon:RegisterSize('tex', 'shieldh', 12)
 
 	addon:InitModuleOptions(self)
 	mod:SetEnabledState(self.db.profile.enabled)

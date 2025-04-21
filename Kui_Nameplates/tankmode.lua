@@ -288,14 +288,14 @@ local function SetAgroText(self, agro, agrocolor)
         self.agroText:Hide()
     else
         agrocolor = agrocolor and agrocolor or {1, 0, 0}
-        self.agroText:SetText(agro)
+        self.agroText:SetText(math.floor(agro))
         self.agroText:SetTextColor(unpack(agrocolor))
         self.agroText:Show()
     end
 end
 
 function mod:CreateAgroText(msg, frame)
-    --printT("CreateAgroText")
+
     frame.agroText = frame:CreateFontString(frame.overlay, {
         size = 'spellname',
         outline = 'OUTLINE'
