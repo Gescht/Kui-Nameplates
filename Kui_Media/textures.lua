@@ -1,5 +1,5 @@
 local media = LibStub("LibSharedMedia-3.0")
-for i = 1, 25 do
+for i = 1, 26 do
   media:Register("statusbar", "pfUI-"..string.char(64+i), "Interface\\AddOns\\Kui_Media\\t\\pfui\\pfUI-"..string.char(64+i))
 end   
 
