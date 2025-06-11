@@ -1,4 +1,4 @@
-# Kui-Namaplates
+# Kui-Nameplates
  Port of Kui-Namaplates to Vanilla
 
 # Download
