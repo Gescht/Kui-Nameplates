@@ -1,6 +1,2 @@
 # Kui-Nameplates
- Port of Kui-Namaplates to Vanilla
-
-# Download
-
-Download it only from [releases](https://github.com/laytya/Kui-Namaplates/releases) - not from CODE button.
+ Port of Kui-Nameplates to Vanilla
